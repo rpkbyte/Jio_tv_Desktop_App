@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+build/
+out/
+
+# Android raw APK packages
+extracted_apk/
+*.apk
+
+# Environment & Logs
+.env
+*.log
+.DS_Store
+Thumbs.db
