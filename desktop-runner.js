@@ -98,18 +98,18 @@ server.listen(PORT, '127.0.0.1', () => {
     ];
 
     const child = spawn(browserPath, appArgs, {
-      detached: false,
+      detached: true,
       stdio: 'ignore'
     });
+    child.unref();
 
-    child.on('exit', () => {
-      console.log('JioTV Desktop window closed. Shutting down server...');
-      server.close(() => process.exit(0));
-    });
+    console.log(`\nJioTV Desktop Window opened successfully!`);
+    console.log(`Server is active at ${appUrl}`);
+    console.log(`(Press Ctrl+C to stop the server)\n`);
 
     process.on('SIGINT', () => {
-      try { child.kill(); } catch (e) {}
-      process.exit(0);
+      console.log('\nShutting down JioTV server...');
+      server.close(() => process.exit(0));
     });
   } else {
     console.log(`Please open your browser to: ${appUrl}`);
