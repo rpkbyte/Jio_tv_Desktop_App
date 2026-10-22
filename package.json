@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "vite"
+    "start": "node desktop-runner.js",
+    "desktop": "node desktop-runner.js"
   },
   "dependencies": {
     "hls.js": "^1.5.17",

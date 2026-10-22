@@ -17,3 +17,4 @@ extracted_apk/
 *.log
 .DS_Store
 Thumbs.db
+.jiotv_profile/
