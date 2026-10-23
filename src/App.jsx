@@ -167,16 +167,16 @@ export default function App() {
             onPrevChannel={handlePrevChannel}
             onToggleZapper={() => setIsZapperOpen(!isZapperOpen)}
             isZapperOpen={isZapperOpen}
-          />
-
-          {/* Quick TV Channel Zapper Drawer */}
-          <ChannelZapper
-            isOpen={isZapperOpen}
-            onClose={() => setIsZapperOpen(false)}
-            channels={CHANNELS}
-            currentChannel={currentChannel}
-            onSelectChannel={(ch) => setCurrentChannel(ch)}
-          />
+          >
+            {/* Quick TV Channel Zapper Drawer (Accessible in Fullscreen & Normal) */}
+            <ChannelZapper
+              isOpen={isZapperOpen}
+              onClose={() => setIsZapperOpen(false)}
+              channels={CHANNELS}
+              currentChannel={currentChannel}
+              onSelectChannel={(ch) => setCurrentChannel(ch)}
+            />
+          </Player>
         </div>
 
         {/* View Switcher based on Active Tab */}

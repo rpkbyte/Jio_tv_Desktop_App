@@ -1,7 +1,10 @@
 import React from 'react';
-import { X, Wifi, Keyboard } from 'lucide-react';
+import { X, Wifi, Keyboard, Sun, Moon, Monitor } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function SettingsModal({ isOpen, onClose }) {
+  const { theme, effectiveTheme, setTheme } = useTheme();
+
   if (!isOpen) return null;
 
   return (
@@ -32,6 +35,62 @@ export default function SettingsModal({ isOpen, onClose }) {
               Connected
             </span>
           </div>
+
+          {/* Appearance & Theme */}
+          <div className="settings-field">
+            <div className="settings-field-header">
+              <label id="theme-selection-label" className="settings-label">
+                Appearance &amp; Theme
+              </label>
+              <span className="settings-hint">
+                {theme === 'system'
+                  ? `System (${effectiveTheme === 'dark' ? 'Dark' : 'Light'})`
+                  : theme === 'dark'
+                  ? 'Dark Mode'
+                  : 'Light Mode'}
+              </span>
+            </div>
+            <div
+              className="theme-selector-group"
+              role="radiogroup"
+              aria-labelledby="theme-selection-label"
+            >
+              <button
+                type="button"
+                className={`theme-option-btn ${theme === 'dark' ? 'active' : ''}`}
+                onClick={() => setTheme('dark')}
+                role="radio"
+                aria-checked={theme === 'dark'}
+                aria-label="Dark Mode"
+              >
+                <Moon size={15} aria-hidden="true" />
+                <span>Dark</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-option-btn ${theme === 'light' ? 'active' : ''}`}
+                onClick={() => setTheme('light')}
+                role="radio"
+                aria-checked={theme === 'light'}
+                aria-label="Light Mode"
+              >
+                <Sun size={15} aria-hidden="true" />
+                <span>Light</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-option-btn ${theme === 'system' ? 'active' : ''}`}
+                onClick={() => setTheme('system')}
+                role="radio"
+                aria-checked={theme === 'system'}
+                aria-label="System Mode"
+              >
+                <Monitor size={15} aria-hidden="true" />
+                <span>System</span>
+              </button>
+            </div>
+          </div>
+
 
           {/* Streaming Quality */}
           <div className="settings-field">

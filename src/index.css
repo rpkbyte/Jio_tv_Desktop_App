@@ -1,6 +1,7 @@
 /* Hallmark · theme: modern-minimal · critique: P5 H5 E5 S5 R5 V5 · weakest: S, desktop TV player interface tuned to broadcast standards */
 
-:root {
+:root,
+html[data-theme="dark"] {
   /* Brand and Accent Tokens */
   --jio-red: #e11b22;
   --jio-red-hover: #f02830;
@@ -79,6 +80,63 @@
   --transition-fast: color 120ms ease, background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
   --transition-normal: color 160ms ease, background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
 }
+
+/* Light Theme Tokens */
+html[data-theme="light"] {
+  /* Brand and Accent Tokens */
+  --jio-red: #d31820;
+  --jio-red-hover: #b8141b;
+  --jio-red-active: #9e1017;
+  --jio-red-subtle: rgba(211, 24, 32, 0.08);
+  --jio-red-border: rgba(211, 24, 32, 0.3);
+  --jio-red-ink: #ffffff;
+
+  /* Surfaces - Clean architectural light neutral scale (no harsh glare) */
+  --bg-app: #f4f6f9;
+  --bg-header: #ffffff;
+  --bg-surface-1: #ffffff;
+  --bg-surface-2: #f8fafc;
+  --bg-surface-3: #eef2f6;
+  --bg-surface-hover: #e2e8f0;
+  --bg-surface-active: #cbd5e1;
+  --bg-modal-overlay: rgba(15, 23, 42, 0.48);
+
+  /* Video player overlays: maintain broadcast dark contrast for overlay controls */
+  --bg-player-bar: rgba(10, 14, 21, 0.96);
+  --bg-player-top: rgba(10, 14, 21, 0.92);
+  --bg-video-wrapper: #06080d;
+  --bg-card-banner: #e2e8f0;
+  --bg-banner-overlay: rgba(15, 23, 42, 0.4);
+  --bg-badge: rgba(15, 23, 42, 0.75);
+  --bg-kbd: #e2e8f0;
+
+  /* Borders - 1px crisp neutral borders */
+  --border-subtle: #e2e8f0;
+  --border-default: #cbd5e1;
+  --border-hover: #94a3b8;
+  --border-active: #d31820;
+  --border-transparent: transparent;
+
+  /* Text - High contrast slate architectural scale */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #f8fafc;
+
+  /* Semantic State Colors */
+  --live-green: #059669;
+  --live-green-subtle: rgba(5, 150, 105, 0.1);
+  --live-green-border: rgba(5, 150, 105, 0.3);
+  --hd-blue: #0284c7;
+  --hd-blue-subtle: rgba(2, 132, 199, 0.1);
+  --hd-blue-border: rgba(2, 132, 199, 0.3);
+
+  /* Shadows - Offset & blur balanced for light background */
+  --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-surface: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.16);
+}
+
 
 /* Base Document Setup */
 html, body {
@@ -501,8 +559,99 @@ html, body {
   object-fit: contain;
 }
 
-/* Player Overlays */
+/* Video Player Fullscreen Rules (Standard, WebKit, and fallback class) */
+:fullscreen.player-container,
+:-webkit-full-screen.player-container,
+.player-container.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  z-index: 99999 !important;
+  background: #000000 !important;
+  box-shadow: none !important;
+}
+
+:fullscreen .video-wrapper,
+:-webkit-full-screen .video-wrapper,
+.player-container.is-fullscreen .video-wrapper {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  aspect-ratio: auto !important;
+  background: #000000 !important;
+  border-radius: 0 !important;
+}
+
+:fullscreen .video-element,
+:-webkit-full-screen .video-element,
+.player-container.is-fullscreen .video-element {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  object-fit: contain !important;
+}
+
+/* Hide cursor when controls are hidden during fullscreen playback */
+.player-container.hide-cursor,
+.player-container.hide-cursor .video-wrapper,
+.player-container.hide-cursor .video-element {
+  cursor: none !important;
+}
+
+/* Fullscreen Top & Bottom bar adjustments */
+:fullscreen .player-top-bar,
+:-webkit-full-screen .player-top-bar,
+.player-container.is-fullscreen .player-top-bar {
+  padding: var(--space-5) var(--space-8);
+}
+
+:fullscreen .player-controls-bar,
+:-webkit-full-screen .player-controls-bar,
+.player-container.is-fullscreen .player-controls-bar {
+  padding: var(--space-4) var(--space-8) var(--space-5);
+}
+
+/* Channel Zapper in Fullscreen */
+:fullscreen .channel-zapper-drawer,
+:-webkit-full-screen .channel-zapper-drawer,
+.player-container.is-fullscreen .channel-zapper-drawer {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: 100vh !important;
+  z-index: 100000 !important;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Player Overlays - Enforce broadcast dark contrast in all themes */
+
+.player-top-bar,
+.player-bottom-bar,
+.player-error-overlay,
+.player-buffering-overlay,
+.player-ambient-backdrop {
+  --text-primary: #f5f7fa;
+  --text-secondary: #8e9db1;
+  --text-muted: #64748b;
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-default: rgba(255, 255, 255, 0.2);
+  --border-hover: rgba(255, 255, 255, 0.35);
+  --bg-surface-2: rgba(255, 255, 255, 0.1);
+  --bg-surface-3: rgba(255, 255, 255, 0.16);
+  --bg-surface-hover: rgba(255, 255, 255, 0.2);
+}
+
 .player-top-bar {
+
   position: absolute;
   top: var(--space-0);
   left: var(--space-0);
@@ -579,11 +728,71 @@ html, body {
   letter-spacing: 0.02em;
 }
 
-.live-pulse {
-  width: var(--space-2);
-  height: var(--space-2);
-  background: var(--jio-red-ink);
+.live-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-xs);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: var(--font-family);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.live-badge-btn.is-live {
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  border-color: var(--jio-red);
+}
+
+.live-badge-btn.is-delayed {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.live-badge-btn.is-delayed:hover {
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  border-color: var(--jio-red);
+}
+
+.live-pulse {
+  width: 6px;
+  height: 6px;
+  background: var(--jio-red-ink);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Center Play Button Overlay */
@@ -602,6 +811,7 @@ html, body {
 .spin-icon {
   color: var(--jio-red);
 }
+
 
 .error-overlay {
   background: var(--bg-modal-overlay);
@@ -780,7 +990,7 @@ html, body {
 
 .quality-menu-popup {
   position: absolute;
-  bottom: var(--space-7);
+  bottom: calc(100% + var(--space-2));
   right: var(--space-0);
   background: var(--bg-surface-1);
   border: 1px solid var(--border-default);
@@ -789,9 +999,39 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 90px;
+  box-shadow: var(--shadow-surface);
   z-index: 20;
   color: var(--text-primary);
 }
+
+.quality-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.quality-menu-item:hover {
+  background: var(--bg-surface-3);
+  color: var(--text-primary);
+}
+
+.quality-menu-item.active {
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  font-weight: 600;
+}
+
 
 /* Channel Grid Section */
 .section-title-row {
@@ -1555,7 +1795,66 @@ html, body {
   cursor: not-allowed;
 }
 
+/* Appearance & Theme Selector Control */
+.settings-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.theme-selector-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  background: var(--bg-surface-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.theme-option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.theme-option-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.theme-option-btn.active {
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  border-color: var(--jio-red);
+  font-weight: 600;
+  box-shadow: var(--shadow-subtle);
+}
+
+.theme-option-btn:focus-visible {
+  outline: 2px solid var(--border-active);
+  outline-offset: 2px;
+}
+
 .settings-shortcuts-block {
+
   padding: var(--space-3);
   background: var(--bg-surface-2);
   border-radius: var(--radius-md);
