@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
-import { CATEGORIES, LANGUAGES } from '../data/channels';
+import { X } from 'lucide-react';
+import { CATEGORIES, LANGUAGES } from '../data/channels.js';
 
 export default function FilterModal({
   isOpen,
@@ -14,21 +14,25 @@ export default function FilterModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="filter-modal-title">
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 className="modal-title">Channel Filters</h3>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={20} />
+          <h3 id="filter-modal-title" className="modal-title">Channel Filters</h3>
+          <button 
+            className="modal-close-btn" 
+            onClick={onClose}
+            aria-label="Close Filter Dialog"
+          >
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
         {/* Categories Section */}
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-            Categories / Genres
+        <div className="modal-section">
+          <h4 className="modal-section-title">
+            Categories &amp; Genres
           </h4>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="modal-pills-wrap">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
@@ -42,11 +46,11 @@ export default function FilterModal({
         </div>
 
         {/* Languages Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h4 style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+        <div className="modal-section">
+          <h4 className="modal-section-title">
             Languages
           </h4>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="modal-pills-wrap">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang}
@@ -60,15 +64,9 @@ export default function FilterModal({
         </div>
 
         {/* Bottom Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="modal-footer-row">
           <button
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              fontSize: '0.88rem',
-              cursor: 'pointer'
-            }}
+            className="btn-text"
             onClick={onReset}
           >
             Reset Filters
@@ -76,10 +74,9 @@ export default function FilterModal({
 
           <button
             className="category-pill active"
-            style={{ padding: '8px 20px', fontSize: '0.9rem' }}
             onClick={onClose}
           >
-            Apply & Close
+            Apply Filters
           </button>
         </div>
       </div>

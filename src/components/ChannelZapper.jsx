@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Play } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function ChannelZapper({
   isOpen,
@@ -11,75 +11,59 @@ export default function ChannelZapper({
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      bottom: 0,
-      width: '320px',
-      background: 'rgba(12, 16, 24, 0.94)',
-      backdropFilter: 'blur(16px)',
-      borderLeft: '1px solid var(--border-glass)',
-      zIndex: 30,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '16px',
-      boxShadow: '-8px 0 25px rgba(0,0,0,0.7)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-white)' }}>
-          Quick Channel Zapper
+    <aside className="channel-zapper-drawer" aria-label="Channel Quick Switcher">
+      <div className="zapper-header">
+        <h3 className="zapper-title">
+          Channel Switcher
         </h3>
-        <button className="modal-close-btn" onClick={onClose}>
-          <X size={18} />
+        <button 
+          className="modal-close-btn" 
+          onClick={onClose}
+          aria-label="Close Channel Switcher"
+        >
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="zapper-list" role="list">
         {channels.map((ch) => {
           const isSelected = currentChannel?.id === ch.id;
 
           return (
-            <div
+            <button
               key={ch.id}
+              className={`zapper-item ${isSelected ? 'active' : ''}`}
               onClick={() => {
                 onSelectChannel(ch);
                 onClose();
               }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                background: isSelected ? 'rgba(225, 27, 34, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                border: isSelected ? '1px solid var(--jio-red)' : '1px solid transparent',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
+              role="listitem"
             >
               <img
                 src={ch.logo}
-                alt={ch.name}
-                style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }}
+                alt=""
+                className="zapper-logo-img"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
               />
 
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div className="zapper-info">
+                <div className="zapper-ch-name">
                   {ch.name}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="zapper-show-title">
                   {ch.currentShow.title}
                 </div>
               </div>
 
-              <span style={{ fontSize: '0.72rem', color: isSelected ? 'var(--jio-red)' : 'var(--text-muted)', fontWeight: 700 }}>
+              <span className="zapper-ch-number">
                 {ch.number}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
-    </div>
+    </aside>
   );
 }

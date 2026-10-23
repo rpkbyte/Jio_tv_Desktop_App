@@ -1,60 +1,49 @@
 import React from 'react';
-import { X, ShieldCheck, Cpu, Tv, Wifi, Globe, Sliders } from 'lucide-react';
+import { X, Wifi, Keyboard } from 'lucide-react';
 
 export default function SettingsModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 className="modal-title">Settings & System Info</h3>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={20} />
+          <h3 id="settings-modal-title" className="modal-title">Settings &amp; Preferences</h3>
+          <button 
+            className="modal-close-btn" 
+            onClick={onClose}
+            aria-label="Close Settings"
+          >
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.88rem' }}>
-          {/* Account status */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '8px',
-            border: '1px solid var(--border-glass)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Wifi size={18} style={{ color: 'var(--live-green)' }} />
+        <div className="settings-content">
+          {/* Network status */}
+          <div className="settings-status-row">
+            <div className="status-row-left">
+              <Wifi size={16} className="status-icon" aria-hidden="true" />
               <div>
-                <div style={{ fontWeight: 600 }}>Jio Network Status</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Connected via JioFiber Broadband</div>
+                <div className="status-row-label">Jio Network Status</div>
+                <div className="status-row-desc">Connected via Jio Broadband</div>
               </div>
             </div>
-            <span style={{ color: 'var(--live-green)', fontSize: '0.75rem', fontWeight: 700 }}>
-              ACTIVE
+            <span className="status-badge">
+              Connected
             </span>
           </div>
 
-          {/* Video Streaming Preferences */}
-          <div>
-            <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+          {/* Streaming Quality */}
+          <div className="settings-field">
+            <label htmlFor="setting-quality" className="settings-label">
               Default Streaming Quality
             </label>
             <select
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: '6px',
-                color: '#fff',
-                outline: 'none'
-              }}
-              defaultValue="Auto (Adaptive 1080p)"
+              id="setting-quality"
+              className="settings-select"
+              defaultValue="Auto"
             >
-              <option value="Auto (Adaptive 1080p)">Auto (Adaptive 1080p High Quality)</option>
+              <option value="Auto">Auto (Adaptive 1080p Full HD)</option>
               <option value="1080p">1080p Full HD Always</option>
               <option value="720p">720p Standard HD</option>
               <option value="480p">480p Data Saver</option>
@@ -62,23 +51,16 @@ export default function SettingsModal({ isOpen, onClose }) {
           </div>
 
           {/* Audio Language */}
-          <div>
-            <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-              Default Primary Audio Track
+          <div className="settings-field">
+            <label htmlFor="setting-audio" className="settings-label">
+              Preferred Audio Track
             </label>
             <select
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: '6px',
-                color: '#fff',
-                outline: 'none'
-              }}
-              defaultValue="Original / Hindi"
+              id="setting-audio"
+              className="settings-select"
+              defaultValue="Original"
             >
-              <option value="Original / Hindi">Original Broadcast / Hindi</option>
+              <option value="Original">Original Broadcast / Hindi</option>
               <option value="English">English</option>
               <option value="Tamil">Tamil</option>
               <option value="Telugu">Telugu</option>
@@ -86,32 +68,50 @@ export default function SettingsModal({ isOpen, onClose }) {
             </select>
           </div>
 
-          {/* Reverse Engineering & Build Parity Info */}
-          <div style={{
-            padding: '12px',
-            background: 'rgba(225, 27, 34, 0.08)',
-            borderRadius: '8px',
-            border: '1px solid rgba(225, 27, 34, 0.25)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--jio-red)' }} />
-              <div style={{ fontWeight: 600, color: 'var(--jio-red)', fontSize: '0.85rem' }}>
-                JioTV APK v7.1.8 Specification Match
+          {/* Keyboard Shortcuts Reference */}
+          <div className="settings-shortcuts-block">
+            <div className="shortcuts-header">
+              <Keyboard size={15} aria-hidden="true" />
+              <span className="shortcuts-title">Keyboard Shortcuts</span>
+            </div>
+            <div className="shortcuts-grid">
+              <div className="shortcut-row">
+                <span>Play / Pause</span>
+                <kbd className="shortcut-kbd">Space</kbd>
+              </div>
+              <div className="shortcut-row">
+                <span>Toggle Mute</span>
+                <kbd className="shortcut-kbd">M</kbd>
+              </div>
+              <div className="shortcut-row">
+                <span>Fullscreen</span>
+                <kbd className="shortcut-kbd">F</kbd>
+              </div>
+              <div className="shortcut-row">
+                <span>Channel Switcher</span>
+                <kbd className="shortcut-kbd">Z</kbd>
+              </div>
+              <div className="shortcut-row">
+                <span>Previous / Next Channel</span>
+                <kbd className="shortcut-kbd">↑ / ↓</kbd>
+              </div>
+              <div className="shortcut-row">
+                <span>Switch Tabs</span>
+                <kbd className="shortcut-kbd">1 - 4</kbd>
               </div>
             </div>
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              Reverse-engineered using REA static asset and package inspection. Includes authentic UI drawables, live HLS video playback pipeline, 7-day catch-up engine, and full EPG schedule guide.
-            </p>
           </div>
 
-          {/* Close action */}
-          <button
-            className="category-pill active"
-            style={{ width: '100%', padding: '10px', marginTop: '6px' }}
-            onClick={onClose}
-          >
-            Save & Close
-          </button>
+          {/* Close button */}
+          <div className="modal-footer-row">
+            <button
+              className="category-pill active"
+              onClick={onClose}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              Save Preferences
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import FilterModal from './components/FilterModal.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
 import ChannelZapper from './components/ChannelZapper.jsx';
 import { CHANNELS, CATEGORIES, LANGUAGES } from './data/channels.js';
+import { Globe } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('live'); // 'live' | 'epg' | 'catchup' | 'favorites'
@@ -35,6 +36,32 @@ export default function App() {
       console.error('Failed to save favorites:', e);
     }
   }, [favorites]);
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+      if (e.key === 'Escape') {
+        setIsFilterModalOpen(false);
+        setIsSettingsModalOpen(false);
+        setIsZapperOpen(false);
+      } else if (e.key === '1') {
+        setActiveTab('live');
+      } else if (e.key === '2') {
+        setActiveTab('epg');
+      } else if (e.key === '3') {
+        setActiveTab('catchup');
+      } else if (e.key === '4') {
+        setActiveTab('favorites');
+      } else if (e.key === 'z' || e.key === 'Z') {
+        setIsZapperOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleFavorite = (channelId) => {
     setFavorites((prev) => 
@@ -107,7 +134,7 @@ export default function App() {
 
       {/* Category Pills & Quick Filter Bar */}
       <div className="filter-bar">
-        <div className="category-scroll">
+        <div className="category-scroll" role="toolbar" aria-label="Channel Categories">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -120,13 +147,14 @@ export default function App() {
         </div>
 
         {/* Quick Language Selector */}
-        <div 
+        <button 
           className="language-dropdown"
           onClick={() => setIsFilterModalOpen(true)}
           title="Change language filter"
         >
-          <span>🌐 {activeLanguage}</span>
-        </div>
+          <Globe size={15} aria-hidden="true" />
+          <span>{activeLanguage}</span>
+        </button>
       </div>
 
       {/* Main Content Area */}

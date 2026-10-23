@@ -18,3 +18,4 @@ extracted_apk/
 .DS_Store
 Thumbs.db
 .jiotv_profile/
+.agents
