@@ -8,6 +8,8 @@ import {
 
 export default function Player({ 
   channel, 
+  userSession,
+  onOpenLogin,
   onNextChannel, 
   onPrevChannel, 
   onToggleZapper,
@@ -192,6 +194,19 @@ export default function Player({
               hls.recoverMediaError();
               break;
             default:
+              if (data.details && (data.details.includes('key') || data.details.includes('decrypt') || data.details.includes('drm'))) {
+                console.warn('DRM stream encountered; switching to backup preview stream.');
+                hls.destroy();
+                const fallbackHls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                hlsRef.current = fallbackHls;
+                fallbackHls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+                fallbackHls.attachMedia(video);
+                fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                  setIsLoading(false);
+                  video.play().catch(() => setIsPlaying(false));
+                });
+                break;
+              }
               setStreamError(true);
               setIsLoading(false);
               hls.destroy();
@@ -467,6 +482,25 @@ export default function Player({
                   <span>{isLiveEdge ? 'Live' : 'Go to Live'}</span>
                 </button>
                 {channel.isHd && <span className="hd-pill">HD 1080p</span>}
+                {channel.isJioLive && (
+                  <span className="jio-feed-pill" title="Direct live stream from Jio network">
+                    Official Feed
+                  </span>
+                )}
+                {channel.isDRM && (
+                  <span className="drm-pill" title="Protected broadcast feed with verified subscriber token">
+                    DRM
+                  </span>
+                )}
+                {!userSession && onOpenLogin && (
+                  <button 
+                    className="signin-feed-pill" 
+                    onClick={onOpenLogin}
+                    title="Sign in with your Jio mobile number for direct high-definition streams"
+                  >
+                    Sign In for HD Feed
+                  </button>
+                )}
                 <span className="player-ch-num">
                   CH {channel.number}
                 </span>

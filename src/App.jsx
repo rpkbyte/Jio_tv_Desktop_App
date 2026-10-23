@@ -8,7 +8,7 @@ import SettingsModal from './components/SettingsModal.jsx';
 import LoginModal from './components/LoginModal.jsx';
 import ChannelZapper from './components/ChannelZapper.jsx';
 import { CHANNELS, CATEGORIES, LANGUAGES } from './data/channels.js';
-import { initBackgroundSync, fetchChannelLiveEpg } from './services/jioApiService.js';
+import { initBackgroundSync, fetchChannelLiveEpg, fetchChannelStreamUrl } from './services/jioApiService.js';
 import { getStoredSession } from './services/jioAuthService.js';
 import { Globe } from 'lucide-react';
 
@@ -79,6 +79,34 @@ export default function App() {
       isMounted = false;
     };
   }, [currentChannel?.channelId]);
+
+  // Resolve official JioTV live playback stream for selected channel
+  useEffect(() => {
+    if (!currentChannel?.channelId) return;
+    let isMounted = true;
+
+    fetchChannelStreamUrl(currentChannel.channelId, userSession).then((streamData) => {
+      if (isMounted && streamData?.success && streamData?.streamUrl) {
+        setCurrentChannel((prev) => {
+          if (prev && (prev.id === currentChannel.id || prev.channelId === currentChannel.channelId)) {
+            return {
+              ...prev,
+              streamUrl: streamData.streamUrl,
+              rawStreamUrl: streamData.rawUrl,
+              isJioLive: true,
+              isDRM: streamData.isDRM,
+              playbackToken: streamData.playbackToken
+            };
+          }
+          return prev;
+        });
+      }
+    }).catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentChannel?.channelId, userSession]);
 
   // Listen to subscriber login/logout events
   useEffect(() => {
@@ -219,6 +247,8 @@ export default function App() {
         <div style={{ position: 'relative' }}>
           <Player
             channel={currentChannel}
+            userSession={userSession}
+            onOpenLogin={() => setIsLoginModalOpen(true)}
             onNextChannel={handleNextChannel}
             onPrevChannel={handlePrevChannel}
             onToggleZapper={() => setIsZapperOpen(!isZapperOpen)}

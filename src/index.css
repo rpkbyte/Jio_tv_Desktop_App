@@ -752,6 +752,67 @@ html, body {
   border-color: var(--jio-red);
 }
 
+.hd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  background: var(--hd-blue-subtle);
+  color: var(--hd-blue);
+  border: 1px solid var(--hd-blue-border);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.jio-feed-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  background: var(--live-green-subtle);
+  color: var(--live-green);
+  border: 1px solid var(--live-green-border);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.drm-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-surface-3);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.signin-feed-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  background: var(--jio-red-subtle);
+  color: var(--jio-red);
+  border: 1px solid var(--jio-red-border);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.signin-feed-pill:hover {
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  border-color: var(--jio-red);
+}
+
 .live-pulse {
   width: 6px;
   height: 6px;

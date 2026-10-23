@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { 
   normalizeJioChannel, 
   formatTimeFromEpoch, 
+  fetchChannelStreamUrl,
   JIO_CATEGORY_MAP, 
   JIO_LANGUAGE_MAP 
 } from '../services/jioApiService.js';
@@ -144,8 +145,26 @@ try {
   console.error('  ❌ FAIL: Catchup schedule generator failed:', e.message);
 }
 
-console.log(`\n🎉 Results: ${passed} / 6 tests passed.\n`);
+// Test 7: fetchChannelStreamUrl authentication verification and error handling
+try {
+  mockStorage.clear?.();
+  const unauthRes = await fetchChannelStreamUrl('ch-144');
+  assert.strictEqual(unauthRes.success, false, 'Must fail when unauthenticated');
+  assert.strictEqual(unauthRes.reason, 'unauthenticated');
 
-if (passed < 6) {
+  const emptyCidRes = await fetchChannelStreamUrl('');
+  assert.strictEqual(emptyCidRes.success, false);
+  assert.strictEqual(emptyCidRes.reason, 'invalid_channel');
+
+  console.log('  ✅ PASS: fetchChannelStreamUrl properly guards credentials and validates parameters');
+  passed++;
+} catch (e) {
+  console.error('  ❌ FAIL: fetchChannelStreamUrl test failed:', e.message);
+}
+
+console.log(`\n🎉 Results: ${passed} / 7 tests passed.\n`);
+
+if (passed < 7) {
   process.exit(1);
 }
+

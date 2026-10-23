@@ -1,5 +1,6 @@
 // JioTV Official API Service (Hybrid Sync, CDN Metadata & Live 24-hr EPG)
 // Sourced from JioTV Mobile Application Bytecode Analysis
+import { getStoredSession, getOrCreateDeviceId } from './jioAuthService.js';
 
 export const JIO_CATEGORY_MAP = {
   '10': 'Infotainment',
@@ -279,3 +280,111 @@ export function initBackgroundSync(onUpdateCallback) {
     }
   }, 800);
 }
+
+/**
+ * Request real official live playback URL for a channel from JioTV Playback API
+ * Reverse engineered from classes8.dex: PostLoginNewSystemApiInterface.getPlaybackURL & ChannelUrlModel
+ * @param {string|number} channelId - e.g. "ch-144" or 144
+ * @param {object} [providedSession] - Optional stored subscriber session
+ */
+export async function fetchChannelStreamUrl(channelId, providedSession = null) {
+  if (!channelId) {
+    return { success: false, reason: 'invalid_channel', message: 'Channel ID missing.' };
+  }
+
+  const session = providedSession || getStoredSession();
+  const token = session?.authToken || session?.ssoToken;
+  if (!token) {
+    return { 
+      success: false, 
+      reason: 'unauthenticated', 
+      message: 'Sign in with your Jio mobile number to access direct live streams.' 
+    };
+  }
+
+  const cleanCid = String(channelId).replace('ch-', '');
+  const deviceId = session?.deviceId || getOrCreateDeviceId();
+  const endpoint = '/api/jio-user/playback/apis/v1.1/geturl';
+
+  // Form URL encoded payload as required by JioTV getPlaybackURL API
+  const formData = new URLSearchParams();
+  formData.append('stream_type', 'LIVE');
+  formData.append('channel_id', cleanCid);
+  formData.append('programId', '');
+  formData.append('showtime', '');
+  formData.append('srno', '');
+  formData.append('begin', '');
+  formData.append('end', '');
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'appkey': 'NzNiMDhlYzQyNjJm',
+        'appName': 'RJIL_JioTV',
+        'devicetype': 'phone',
+        'os': 'android',
+        'deviceId': deviceId,
+        'isott': 'false',
+        'accesstoken': session?.authToken || token,
+        'ssoToken': session?.ssoToken || token,
+        'ssotoken': session?.ssoToken || token,
+        'lbcookie': session?.lbCookie || '1'
+      },
+      body: formData.toString()
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.status === 419) {
+      return {
+        success: false,
+        reason: 'token_expired',
+        message: 'Your JioTV subscriber session has expired. Please log in again.'
+      };
+    }
+
+    if (!response.ok || data.code === 400 || data.code === 401 || data.code === 403) {
+      return {
+        success: false,
+        reason: 'api_error',
+        message: data.message || `Playback request returned status ${response.status}.`
+      };
+    }
+
+    const liveUrl = data.result || data.url || data.playbackUrl;
+    if (!liveUrl) {
+      return {
+        success: false,
+        reason: 'no_stream',
+        message: data.message || 'No stream available for this channel.'
+      };
+    }
+
+    const isDrm = Boolean(data.isDRM);
+    // Route through streaming proxy for User-Agent spoofing and CORS handling
+    const proxiedStreamUrl = liveUrl.startsWith('http') 
+      ? `/api/jio-stream/${liveUrl}` 
+      : liveUrl;
+
+    return {
+      success: true,
+      streamUrl: proxiedStreamUrl,
+      rawUrl: liveUrl,
+      isDRM: isDrm,
+      playbackToken: data.playbackToken || null,
+      bitrates: data.bitrates || [],
+      message: 'Official Jio live stream resolved successfully.'
+    };
+  } catch (err) {
+    console.warn(`Error resolving stream URL for channel ${channelId}:`, err);
+    return {
+      success: false,
+      reason: 'network_error',
+      message: 'Network error connecting to Jio playback service.'
+    };
+  }
+}
+
