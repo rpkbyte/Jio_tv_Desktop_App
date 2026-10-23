@@ -1905,6 +1905,416 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
+/* JioTV Subscriber Account & Login Modal Styles (100% Tokenized) */
+.jio-header-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--jio-red-ink);
+  background: var(--jio-red);
+  border: 1px solid var(--jio-red-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.jio-header-login-btn:hover {
+  background: var(--jio-red-hover);
+  border-color: var(--jio-red);
+}
+
+.jio-header-login-btn:active {
+  background: var(--jio-red-active);
+}
+
+.jio-header-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.jio-header-user-badge:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-surface-3);
+}
+
+.jio-status-dot-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live-green);
+  box-shadow: 0 0 0 2px var(--live-green-subtle);
+}
+
+.jio-header-user-text {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.jio-header-user-icon {
+  color: var(--text-secondary);
+}
+
+/* Jio Login Card Modal Customizations */
+.jio-login-card {
+  max-width: 440px;
+}
+
+.modal-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.jio-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.jio-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.jio-alert-error {
+  background: var(--jio-red-subtle);
+  border: 1px solid var(--jio-red-border);
+  color: var(--text-primary);
+}
+
+.jio-alert-success {
+  background: var(--live-green-subtle);
+  border: 1px solid var(--live-green-border);
+  color: var(--text-primary);
+}
+
+.jio-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.jio-auth-desc {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.jio-highlight-number {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.jio-btn-inline-change {
+  background: transparent;
+  border: none;
+  color: var(--jio-red);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-left: var(--space-2);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.jio-btn-inline-change:hover {
+  color: var(--jio-red-hover);
+}
+
+.jio-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.jio-input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.jio-phone-wrapper,
+.jio-otp-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  transition: var(--transition-fast);
+}
+
+.jio-phone-wrapper:focus-within,
+.jio-otp-wrapper:focus-within {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--border-hover);
+}
+
+.jio-country-code {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  padding-right: var(--space-2);
+  border-right: 1px solid var(--border-subtle);
+  margin-right: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.jio-field-icon {
+  color: var(--text-muted);
+  margin-right: var(--space-2);
+}
+
+.jio-phone-input,
+.jio-otp-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.jio-otp-input {
+  letter-spacing: 0.25em;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.jio-resend-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.jio-timer-text {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.jio-resend-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-0);
+  transition: var(--transition-fast);
+}
+
+.jio-resend-btn:hover {
+  color: var(--text-primary);
+}
+
+.jio-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--jio-red);
+  color: var(--jio-red-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--jio-red-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.jio-btn-primary:hover:not(:disabled) {
+  background: var(--jio-red-hover);
+  border-color: var(--jio-red);
+}
+
+.jio-btn-primary:active:not(:disabled) {
+  background: var(--jio-red-active);
+}
+
+.jio-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Profile Content Inside Modal */
+.jio-profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.jio-profile-badge-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.jio-profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--jio-red-subtle);
+  color: var(--jio-red);
+  border: 1px solid var(--jio-red-border);
+  border-radius: 50%;
+}
+
+.jio-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.jio-profile-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jio-profile-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+}
+
+.jio-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  background: var(--live-green-subtle);
+  border: 1px solid var(--live-green-border);
+  color: var(--live-green);
+}
+
+.jio-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live-green);
+}
+
+.jio-profile-mobile {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.jio-profile-subid {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+}
+
+.jio-profile-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.jio-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.jio-meta-label {
+  color: var(--text-muted);
+}
+
+.jio-meta-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.jio-profile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.jio-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--jio-red);
+  border: 1px solid var(--jio-red-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.jio-btn-danger:hover {
+  background: var(--jio-red-subtle);
+  border-color: var(--jio-red);
+}
+
 /* Reduced Motion Accessible Fallback */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1914,3 +2324,4 @@ html, body {
     scroll-behavior: auto !important;
   }
 }
+

@@ -5,27 +5,36 @@ import ChannelGrid from './components/ChannelGrid.jsx';
 import EpgGuide from './components/EpgGuide.jsx';
 import FilterModal from './components/FilterModal.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
+import LoginModal from './components/LoginModal.jsx';
 import ChannelZapper from './components/ChannelZapper.jsx';
 import { CHANNELS, CATEGORIES, LANGUAGES } from './data/channels.js';
+import { initBackgroundSync, fetchChannelLiveEpg } from './services/jioApiService.js';
+import { getStoredSession } from './services/jioAuthService.js';
 import { Globe } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('live'); // 'live' | 'epg' | 'catchup' | 'favorites'
+  // Pre-bundled channels render at 0ms instant startup
+  const [allChannels, setAllChannels] = useState(CHANNELS);
   const [currentChannel, setCurrentChannel] = useState(CHANNELS[0]);
   const [activeCategory, setActiveCategory] = useState('All Channels');
   const [activeLanguage, setActiveLanguage] = useState('All Languages');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isZapperOpen, setIsZapperOpen] = useState(false);
+
+  // Authenticated Subscriber Session
+  const [userSession, setUserSession] = useState(getStoredSession);
 
   // Persistent Favorites in LocalStorage
   const [favorites, setFavorites] = useState(() => {
     try {
       const saved = localStorage.getItem('jiotv_favorites');
-      return saved ? JSON.parse(saved) : ['star-plus', 'star-sports-1', 'aaj-tak'];
+      return saved ? JSON.parse(saved) : ['ch-144', 'ch-154', 'ch-298'];
     } catch {
-      return ['star-plus', 'star-sports-1', 'aaj-tak'];
+      return ['ch-144', 'ch-154', 'ch-298'];
     }
   });
 
@@ -37,6 +46,49 @@ export default function App() {
     }
   }, [favorites]);
 
+  // Background SWR Revalidation: Silently fetch and merge 1,000+ channels without blocking UI
+  useEffect(() => {
+    initBackgroundSync((freshChannels) => {
+      if (freshChannels && freshChannels.length > 0) {
+        setAllChannels(freshChannels);
+      }
+    });
+  }, []);
+
+  // Fetch real-time live EPG for currently selected channel
+  useEffect(() => {
+    if (!currentChannel?.channelId) return;
+    let isMounted = true;
+
+    fetchChannelLiveEpg(currentChannel.channelId).then((epgData) => {
+      if (isMounted && epgData?.currentShow) {
+        setCurrentChannel((prev) => {
+          if (prev && (prev.id === currentChannel.id || prev.channelId === currentChannel.channelId)) {
+            return {
+              ...prev,
+              currentShow: epgData.currentShow,
+              nextShow: epgData.nextShow || prev.nextShow
+            };
+          }
+          return prev;
+        });
+      }
+    }).catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentChannel?.channelId]);
+
+  // Listen to subscriber login/logout events
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setUserSession(getStoredSession());
+    };
+    window.addEventListener('jiotv-auth-change', handleAuthChange);
+    return () => window.removeEventListener('jiotv-auth-change', handleAuthChange);
+  }, []);
+
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -45,6 +97,7 @@ export default function App() {
       if (e.key === 'Escape') {
         setIsFilterModalOpen(false);
         setIsSettingsModalOpen(false);
+        setIsLoginModalOpen(false);
         setIsZapperOpen(false);
       } else if (e.key === '1') {
         setActiveTab('live');
@@ -73,7 +126,7 @@ export default function App() {
 
   // Filtered Channels calculation
   const filteredChannels = useMemo(() => {
-    return CHANNELS.filter((ch) => {
+    return allChannels.filter((ch) => {
       // Favorites filter
       if (activeTab === 'favorites' && !favorites.includes(ch.id)) {
         return false;
@@ -92,29 +145,29 @@ export default function App() {
       // Search Query filter
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
-        const matchesName = ch.name.toLowerCase().includes(query);
-        const matchesShow = ch.currentShow.title.toLowerCase().includes(query);
-        const matchesCategory = ch.category.toLowerCase().includes(query);
-        const matchesLang = ch.language.toLowerCase().includes(query);
-        const matchesNumber = ch.number.toString().includes(query);
+        const matchesName = ch.name?.toLowerCase().includes(query);
+        const matchesShow = ch.currentShow?.title?.toLowerCase().includes(query);
+        const matchesCategory = ch.category?.toLowerCase().includes(query);
+        const matchesLang = ch.language?.toLowerCase().includes(query);
+        const matchesNumber = ch.number?.toString().includes(query);
         return matchesName || matchesShow || matchesCategory || matchesLang || matchesNumber;
       }
 
       return true;
     });
-  }, [activeTab, activeCategory, activeLanguage, searchQuery, favorites]);
+  }, [allChannels, activeTab, activeCategory, activeLanguage, searchQuery, favorites]);
 
   // Channel switching helpers (Next / Previous)
   const handleNextChannel = () => {
-    const currentIndex = CHANNELS.findIndex((c) => c.id === currentChannel.id);
-    const nextIndex = (currentIndex + 1) % CHANNELS.length;
-    setCurrentChannel(CHANNELS[nextIndex]);
+    const currentIndex = allChannels.findIndex((c) => c.id === currentChannel.id);
+    const nextIndex = (currentIndex + 1) % allChannels.length;
+    setCurrentChannel(allChannels[nextIndex]);
   };
 
   const handlePrevChannel = () => {
-    const currentIndex = CHANNELS.findIndex((c) => c.id === currentChannel.id);
-    const prevIndex = (currentIndex - 1 + CHANNELS.length) % CHANNELS.length;
-    setCurrentChannel(CHANNELS[prevIndex]);
+    const currentIndex = allChannels.findIndex((c) => c.id === currentChannel.id);
+    const prevIndex = (currentIndex - 1 + allChannels.length) % allChannels.length;
+    setCurrentChannel(allChannels[prevIndex]);
   };
 
   return (
@@ -127,9 +180,12 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         openFilterModal={() => setIsFilterModalOpen(true)}
         openSettingsModal={() => setIsSettingsModalOpen(true)}
+        openLoginModal={() => setIsLoginModalOpen(true)}
         activeLanguage={activeLanguage}
         activeCategory={activeCategory}
         favoriteCount={favorites.length}
+        userSession={userSession}
+        isLoggedIn={Boolean(userSession)}
       />
 
       {/* Category Pills & Quick Filter Bar */}
@@ -172,7 +228,7 @@ export default function App() {
             <ChannelZapper
               isOpen={isZapperOpen}
               onClose={() => setIsZapperOpen(false)}
-              channels={CHANNELS}
+              channels={allChannels}
               currentChannel={currentChannel}
               onSelectChannel={(ch) => setCurrentChannel(ch)}
             />
@@ -222,6 +278,12 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+      />
+
+      {/* JioTV Subscriber Login & Account Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
       />
     </div>
   );

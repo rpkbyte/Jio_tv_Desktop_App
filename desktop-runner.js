@@ -1,5 +1,6 @@
 // Desktop Application Native Launcher for JioTV
 import http from 'node:http';
+import https from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,9 +28,83 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf'
 };
 
+function proxyJioRequest(req, res, targetHost, targetPath) {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Max-Age': '86400'
+    });
+    res.end();
+    return;
+  }
+
+  const cleanHeaders = { ...req.headers };
+  delete cleanHeaders['host'];
+  delete cleanHeaders['origin'];
+  delete cleanHeaders['referer'];
+
+  const options = {
+    hostname: targetHost,
+    port: 443,
+    path: targetPath,
+    method: req.method,
+    headers: {
+      ...cleanHeaders,
+      'host': targetHost,
+      'user-agent': 'plaYtv/7.1.7 (Linux;Android 11) ExoPlayerLib/2.11.7'
+    }
+  };
+
+  console.log(`[Jio Proxy Request] ${req.method} https://${targetHost}${targetPath}`);
+
+  const proxyReq = https.request(options, (proxyRes) => {
+    console.log(`[Jio Proxy Response] https://${targetHost}${targetPath} -> Status ${proxyRes.statusCode}`);
+
+    const responseHeaders = { ...proxyRes.headers };
+    responseHeaders['access-control-allow-origin'] = '*';
+    responseHeaders['access-control-allow-methods'] = 'GET, POST, OPTIONS';
+    responseHeaders['access-control-allow-headers'] = '*';
+
+    res.writeHead(proxyRes.statusCode, responseHeaders);
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error(`[Jio Proxy Error] https://${targetHost}${targetPath} -> ${err.message}`);
+    res.writeHead(502, { 
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*' 
+    });
+    res.end(JSON.stringify({ error: 'Jio Proxy Gateway Error', details: err.message }));
+  });
+
+  req.pipe(proxyReq);
+}
+
 function createServer() {
   return http.createServer((req, res) => {
-    let reqPath = decodeURI(req.url.split('?')[0]);
+    const rawUrl = req.url || '/';
+
+    // Handle Jio API Proxies
+    if (rawUrl.startsWith('/api/jio-user')) {
+      const targetPath = rawUrl.replace('/api/jio-user', '');
+      proxyJioRequest(req, res, 'jiotvapi.media.jio.com', targetPath);
+      return;
+    }
+    if (rawUrl.startsWith('/api/jio-data')) {
+      const targetPath = rawUrl.replace('/api/jio-data', '');
+      proxyJioRequest(req, res, 'jiotv.data.cdn.jio.com', targetPath);
+      return;
+    }
+    if (rawUrl.startsWith('/api/jio-epg')) {
+      const targetPath = rawUrl.replace('/api/jio-epg', '');
+      proxyJioRequest(req, res, 'jiotvapi.cdn.jio.com', targetPath);
+      return;
+    }
+
+    let reqPath = decodeURI(rawUrl.split('?')[0]);
     if (reqPath === '/' || reqPath === '') {
       reqPath = '/index.html';
     }
@@ -81,6 +156,7 @@ server.listen(PORT, '127.0.0.1', () => {
   const appUrl = `http://127.0.0.1:${PORT}`;
   console.log(`====================================================`);
   console.log(` JioTV Desktop Application Server running at ${appUrl}`);
+  console.log(` Proxy Endpoints: /api/jio-user, /api/jio-data, /api/jio-epg`);
   console.log(`====================================================`);
 
   const browserPath = findBrowserBinary();

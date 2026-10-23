@@ -8,9 +8,12 @@ export default function Header({
   setSearchQuery,
   openFilterModal,
   openSettingsModal,
+  openLoginModal,
   activeLanguage,
   activeCategory,
-  favoriteCount
+  favoriteCount,
+  userSession,
+  isLoggedIn
 }) {
   return (
     <header className="app-header">
@@ -114,10 +117,31 @@ export default function Header({
           <Settings size={16} aria-hidden="true" />
         </button>
 
-        {/* User Profile */}
-        <div className="action-btn" title="Jio Account Profile" tabIndex={0} role="button">
-          <User size={16} aria-hidden="true" />
-        </div>
+        {/* Jio Subscriber Account / Sign In */}
+        {isLoggedIn ? (
+          <button
+            className="jio-header-user-badge"
+            onClick={openLoginModal}
+            title={`Logged in as Jio Subscriber: ${userSession?.mobile || ''}`}
+            aria-label="Jio Account Profile"
+          >
+            <span className="jio-status-dot-pulse" aria-hidden="true" />
+            <span className="jio-header-user-text">
+              {userSession?.mobile ? `+91 ${userSession.mobile.slice(-4)}` : 'Jio User'}
+            </span>
+            <User size={14} className="jio-header-user-icon" aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            className="jio-header-login-btn"
+            onClick={openLoginModal}
+            title="Sign in with your Jio mobile number"
+            aria-label="Sign in with Jio"
+          >
+            <User size={14} aria-hidden="true" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
     </header>
   );
