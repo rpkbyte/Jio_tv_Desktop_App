@@ -230,6 +230,11 @@ function createServer() {
       proxyJioRequest(req, res, 'jiotvapi.cdn.jio.com', targetPath);
       return;
     }
+    if (rawUrl.startsWith('/api/jio-token')) {
+      const targetPath = rawUrl.replace('/api/jio-token', '');
+      proxyJioRequest(req, res, 'auth.media.jio.com', targetPath);
+      return;
+    }
 
     let reqPath = decodeURI(rawUrl.split('?')[0]);
     if (reqPath === '/' || reqPath === '') {

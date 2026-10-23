@@ -12,6 +12,7 @@ const isLocalEnv = typeof window !== 'undefined' && (
 );
 
 const AUTH_BASE_URL = isLocalEnv ? '/api/jio-user' : 'https://jiotvapi.media.jio.com';
+const TOKEN_BASE_URL = isLocalEnv ? '/api/jio-token' : 'https://auth.media.jio.com';
 
 const APP_KEY = 'NzNiMDhlYzQyNjJm';
 const APP_NAME = 'RJIL_JioTV';
@@ -40,7 +41,7 @@ export function getStoredSession() {
     const raw = localStorage.getItem(STORAGE_SESSION_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw);
-    if (session && (session.ssoToken || session.authToken || session.mobile)) {
+    if (session && (session.authToken || session.ssoToken)) {
       return session;
     }
     return null;
@@ -54,7 +55,14 @@ export function getStoredSession() {
  */
 export function isAuthenticated() {
   const session = getStoredSession();
-  return Boolean(session && (session.ssoToken || session.authToken || session.mobile));
+  const token = session?.authToken || session?.ssoToken;
+  return Boolean(
+    session &&
+    token &&
+    typeof token === 'string' &&
+    token.length > 20 &&
+    token !== 'valid_sso_session'
+  );
 }
 
 /**
@@ -205,22 +213,42 @@ export async function verifyLoginOtp(rawMobile, otp) {
     console.log('Jio verifyLoginOtp response data:', data);
 
     const payloadRoot = data.data || data.result || data;
-    const ssoToken = payloadRoot.ssoToken || data.ssoToken || '';
-    const authToken = payloadRoot.authToken || data.authToken || '';
-    const jToken = payloadRoot.jToken || data.jToken || '';
-    const refreshToken = payloadRoot.refreshToken || data.refreshToken || '';
+    let ssoToken = payloadRoot.ssoToken || data.ssoToken || '';
+    let authToken = payloadRoot.authToken || data.authToken || '';
+    let jToken = payloadRoot.jToken || data.jToken || '';
+    let refreshToken = payloadRoot.refreshToken || data.refreshToken || '';
+    const tempToken = payloadRoot.tempToken || data.tempToken || '';
+    const deviceLimitExceeded = Boolean(payloadRoot.device_limit_exceeded || data.device_limit_exceeded);
     const lbCookie = payloadRoot.lbCookie || data.lbCookie || '';
     const sessionAttributes = payloadRoot.sessionAttributes || data.sessionAttributes || {};
     const userObj = sessionAttributes.user || {};
 
-    if (response.ok || response.status === 200 || ssoToken || authToken || data.code === 200) {
+    // Reverse engineered from classes8.dex: AuthRepositoryImpl & TokenServiceApiService
+    // When device limit is reached or tempToken is returned with empty authToken, auto-exchange via expireAllUsers
+    if ((deviceLimitExceeded || !authToken) && tempToken) {
+      console.log('[Jio Auth] Device limit reached. Auto-exchanging tempToken via expireAllUsers API...');
+      const expireResult = await callExpireAllUsers(tempToken, deviceId);
+      if (expireResult.success) {
+        if (expireResult.authToken) authToken = expireResult.authToken;
+        if (expireResult.ssoToken) ssoToken = expireResult.ssoToken;
+        if (expireResult.refreshToken) refreshToken = expireResult.refreshToken;
+        console.log('[Jio Auth] Device limit resolved! Real subscriber JWTs obtained.');
+      } else {
+        console.warn('[Jio Auth] expireAllUsers call failed:', expireResult.message);
+      }
+    }
+
+    const hasValidToken = (authToken && authToken.length > 20) || (ssoToken && ssoToken.length > 20);
+
+    if (hasValidToken || ((response.ok || response.status === 200 || data.code === 200) && (authToken || ssoToken))) {
       const session = {
         mobile: cleanMobile,
-        ssoToken: ssoToken || 'valid_sso_session',
-        authToken: authToken,
+        ssoToken: ssoToken || authToken,
+        authToken: authToken || ssoToken,
         jToken: jToken,
         refreshToken: refreshToken,
         lbCookie: lbCookie,
+        deviceId: deviceId,
         subscriberId: userObj.subscriberId || `SUB_${cleanMobile}`,
         commonName: userObj.commonName || `Jio Subscriber`,
         isVerified: true
@@ -235,7 +263,7 @@ export async function verifyLoginOtp(rawMobile, otp) {
     } else {
       return {
         success: false,
-        message: data.message || 'Invalid OTP code. Please re-check and try again.'
+        message: data.message || 'Unable to retrieve subscriber authentication token. Please try again.'
       };
     }
   } catch (err) {
@@ -243,6 +271,73 @@ export async function verifyLoginOtp(rawMobile, otp) {
     return {
       success: false,
       message: 'Network verification failed. Please verify your connection.'
+    };
+  }
+}
+
+/**
+ * Deauthorize older devices and exchange tempToken for genuine subscriber JWTs
+ * Reverse engineered from classes8.dex: TokenServiceApiService.expireAllUsers & AuthRepositoryImpl
+ * Endpoint: POST /tokenservice/apis/v2/expireallusers
+ * @param {string} tempToken - Temporary ES256 JWT received when device limit is exceeded
+ * @param {string} [deviceId] - Client device identifier
+ */
+export async function callExpireAllUsers(tempToken, deviceId = null) {
+  if (!tempToken) {
+    return { success: false, message: 'Temp token is missing.' };
+  }
+  const did = deviceId || getOrCreateDeviceId();
+  const endpoint = `${TOKEN_BASE_URL}/tokenservice/apis/v2/expireallusers`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'appkey': APP_KEY,
+        'appName': APP_NAME,
+        'devicetype': 'phone',
+        'os': 'android',
+        'deviceId': did,
+        'isott': 'false',
+        'x-platform': 'android_mobile',
+        'temptoken': tempToken,
+        'tempToken': tempToken
+      },
+      body: JSON.stringify({
+        appName: APP_NAME,
+        deviceId: did
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    console.log('[Jio Auth] callExpireAllUsers response data:', data);
+
+    const payload = data.data || data;
+    const authToken = payload.authToken || '';
+    const ssoToken = payload.ssoToken || '';
+    const refreshToken = payload.refreshToken || '';
+
+    if (response.ok && (authToken || ssoToken)) {
+      return {
+        success: true,
+        authToken,
+        ssoToken,
+        refreshToken,
+        message: 'Device limit resolved successfully!'
+      };
+    }
+
+    return {
+      success: false,
+      message: data.message || `Expire all users failed with status ${response.status}`
+    };
+  } catch (err) {
+    console.warn('Network error in callExpireAllUsers:', err);
+    return {
+      success: false,
+      message: 'Failed to contact Jio Token Service gateway.'
     };
   }
 }

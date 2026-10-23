@@ -26,7 +26,7 @@ export default function LoginModal({ isOpen, onClose }) {
     if (isOpen) {
       const current = getStoredSession();
       setSession(current);
-      if (current && (current.ssoToken || current.mobile)) {
+      if (current && isAuthenticated()) {
         setStep('profile');
       } else {
         setStep('phone');

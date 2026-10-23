@@ -150,6 +150,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api\/jio-epg/, '')
+      },
+      '/api/jio-token': {
+        target: 'https://auth.media.jio.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/jio-token/, '')
       }
     }
   },

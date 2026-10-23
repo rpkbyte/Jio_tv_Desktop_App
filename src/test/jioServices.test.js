@@ -12,7 +12,8 @@ import {
   isAuthenticated, 
   saveSession, 
   getStoredSession, 
-  logout 
+  logout,
+  callExpireAllUsers
 } from '../services/jioAuthService.js';
 import { CHANNELS, CATEGORIES, LANGUAGES, generateCatchupSchedule } from '../data/channels.js';
 
@@ -114,7 +115,8 @@ try {
   // Session saving
   const testSession = {
     mobile: '9876543210',
-    ssoToken: 'sample_sso_token_xyz',
+    authToken: 'header.payload.signature_jwt_token_sample',
+    ssoToken: 'sample_sso_token_xyz_valid_session_token',
     subscriberId: 'SUB_9876543210',
     commonName: 'Test Subscriber'
   };
@@ -122,7 +124,10 @@ try {
   assert.strictEqual(isAuthenticated(), true, 'Should be authenticated after saving session');
   const retrieved = getStoredSession();
   assert.strictEqual(retrieved.mobile, '9876543210');
-  assert.strictEqual(retrieved.ssoToken, 'sample_sso_token_xyz');
+  assert.strictEqual(retrieved.ssoToken, 'sample_sso_token_xyz_valid_session_token');
+
+  // Verify callExpireAllUsers is defined
+  assert.strictEqual(typeof callExpireAllUsers, 'function', 'callExpireAllUsers should be an exported function');
 
   // Logout
   logout();

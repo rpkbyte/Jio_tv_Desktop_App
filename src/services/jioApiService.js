@@ -294,11 +294,21 @@ export async function fetchChannelStreamUrl(channelId, providedSession = null) {
 
   const session = providedSession || getStoredSession();
   const token = session?.authToken || session?.ssoToken;
-  if (!token) {
+  if (!token || token === 'valid_sso_session' || token.length < 20) {
     return { 
       success: false, 
       reason: 'unauthenticated', 
       message: 'Sign in with your Jio mobile number to access direct live streams.' 
+    };
+  }
+
+  // Jio geturl strictly validates accesstoken as a 3-part JWT (header.payload.signature)
+  const rawAccessToken = (session?.authToken && session.authToken.length > 20) ? session.authToken : token;
+  if (typeof rawAccessToken !== 'string' || rawAccessToken.split('.').length !== 3) {
+    return {
+      success: false,
+      reason: 'invalid_token',
+      message: 'Subscriber token format is invalid. Please sign out and sign in again.'
     };
   }
 
@@ -328,9 +338,9 @@ export async function fetchChannelStreamUrl(channelId, providedSession = null) {
         'os': 'android',
         'deviceId': deviceId,
         'isott': 'false',
-        'accesstoken': session?.authToken || token,
-        'ssoToken': session?.ssoToken || token,
-        'ssotoken': session?.ssoToken || token,
+        'accesstoken': rawAccessToken,
+        'ssoToken': session?.ssoToken || rawAccessToken,
+        'ssotoken': session?.ssoToken || rawAccessToken,
         'lbcookie': session?.lbCookie || '1'
       },
       body: formData.toString()
