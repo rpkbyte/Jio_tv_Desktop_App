@@ -101,13 +101,13 @@ html[data-theme="light"] {
   --bg-surface-active: #cbd5e1;
   --bg-modal-overlay: rgba(15, 23, 42, 0.48);
 
-  /* Video player overlays: maintain broadcast dark contrast for overlay controls */
-  --bg-player-bar: rgba(10, 14, 21, 0.96);
-  --bg-player-top: rgba(10, 14, 21, 0.92);
-  --bg-video-wrapper: #06080d;
+  /* Video player in light mode: premium light frosted surfaces with crisp contrast */
+  --bg-player-bar: rgba(255, 255, 255, 0.95);
+  --bg-player-top: rgba(255, 255, 255, 0.92);
+  --bg-video-wrapper: #0b0f19;
   --bg-card-banner: #e2e8f0;
   --bg-banner-overlay: rgba(15, 23, 42, 0.4);
-  --bg-badge: rgba(15, 23, 42, 0.75);
+  --bg-badge: rgba(255, 255, 255, 0.9);
   --bg-kbd: #e2e8f0;
 
   /* Borders - 1px crisp neutral borders */
@@ -632,26 +632,15 @@ html, body {
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.7) !important;
 }
 
-/* Player Overlays - Enforce broadcast dark contrast in all themes */
-
-.player-top-bar,
-.player-bottom-bar,
+/* Player Overlays */
 .player-error-overlay,
-.player-buffering-overlay,
-.player-ambient-backdrop {
+.player-buffering-overlay {
   --text-primary: #f5f7fa;
-  --text-secondary: #8e9db1;
-  --text-muted: #64748b;
-  --border-subtle: rgba(255, 255, 255, 0.12);
-  --border-default: rgba(255, 255, 255, 0.2);
-  --border-hover: rgba(255, 255, 255, 0.35);
-  --bg-surface-2: rgba(255, 255, 255, 0.1);
-  --bg-surface-3: rgba(255, 255, 255, 0.16);
-  --bg-surface-hover: rgba(255, 255, 255, 0.2);
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 }
 
 .player-top-bar {
-
   position: absolute;
   top: var(--space-0);
   left: var(--space-0);
@@ -661,9 +650,11 @@ html, body {
   align-items: center;
   justify-content: space-between;
   background: var(--bg-player-top);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   z-index: 10;
-  transition: var(--transition-fast);
+  transition: opacity 220ms ease;
   color: var(--text-primary);
 }
 
@@ -866,12 +857,14 @@ html, body {
   right: var(--space-0);
   padding: var(--space-3) var(--space-5);
   background: var(--bg-player-bar);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-subtle);
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  transition: var(--transition-fast);
+  transition: opacity 220ms ease;
   color: var(--text-primary);
 }
 
@@ -903,7 +896,8 @@ html, body {
   transform: translateY(-50%);
   width: var(--space-2);
   height: var(--space-2);
-  background: var(--text-primary);
+  background: var(--jio-red);
+  border: 2px solid var(--bg-surface-1);
   border-radius: var(--radius-xs);
   opacity: 1;
 }
@@ -934,7 +928,7 @@ html, body {
 }
 
 .ctrl-btn:hover {
-  color: var(--text-primary);
+  color: var(--jio-red);
   background: var(--bg-surface-3);
 }
 
@@ -958,7 +952,10 @@ html, body {
   height: var(--space-1);
   accent-color: var(--jio-red);
   cursor: pointer;
+  background: var(--border-default);
+  border-radius: var(--radius-xs);
 }
+
 
 .quality-badge {
   font-size: 0.76rem;

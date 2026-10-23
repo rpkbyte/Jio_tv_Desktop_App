@@ -199,19 +199,24 @@ test('CSS index.css has full token coverage between dark and light themes', () =
 });
 
 // -------------------------------------------------------------
-// Test 5: Scoped Video Player Broadcast Contrast
+// Test 5: Player Theme Surfaces & Visibility
 // -------------------------------------------------------------
-test('Video player overlay controls enforce broadcast dark contrast', () => {
+test('Video player surfaces and controls properly adapt between themes', () => {
   const css = fs.readFileSync(cssPath, 'utf-8');
   assert.ok(
-    css.includes('.player-top-bar') && css.includes('.player-bottom-bar'),
-    'Must include player-top-bar and player-bottom-bar'
+    css.includes('.player-top-bar') && css.includes('.player-controls-bar'),
+    'Must include player-top-bar and player-controls-bar'
   );
   assert.ok(
-    css.includes('--text-primary: #f5f7fa;'),
-    'Player overlay must scope light text for broadcast contrast'
+    css.includes('--bg-player-bar: rgba(255, 255, 255, 0.95);'),
+    'Light theme must define light surface for player controls bar'
+  );
+  assert.ok(
+    css.includes('--bg-player-bar: rgba(10, 14, 21, 0.96);'),
+    'Dark theme must define dark surface for player controls bar'
   );
 });
+
 
 // -------------------------------------------------------------
 // Test 6: Theme Selector UI Elements in CSS
