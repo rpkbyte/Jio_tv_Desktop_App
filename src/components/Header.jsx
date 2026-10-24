@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, SlidersHorizontal, Settings, Tv, Calendar, Heart, History, User } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Settings, Tv, Calendar, Heart, History, User, ChevronDown } from 'lucide-react';
 
 export default function Header({
   activeTab,
@@ -118,30 +118,19 @@ export default function Header({
         </button>
 
         {/* Jio Subscriber Account / Sign In */}
-        {isLoggedIn ? (
-          <button
-            className="jio-header-user-badge"
-            onClick={openLoginModal}
-            title={`Logged in as Jio Subscriber: ${userSession?.mobile || ''}`}
-            aria-label="Jio Account Profile"
-          >
-            <span className="jio-status-dot-pulse" aria-hidden="true" />
-            <span className="jio-header-user-text">
-              {userSession?.mobile ? `+91 ${userSession.mobile.slice(-4)}` : 'Jio User'}
-            </span>
-            <User size={14} className="jio-header-user-icon" aria-hidden="true" />
-          </button>
-        ) : (
-          <button
-            className="jio-header-login-btn"
-            onClick={openLoginModal}
-            title="Sign in with your Jio mobile number"
-            aria-label="Sign in with Jio"
-          >
-            <User size={14} aria-hidden="true" />
-            <span>Sign In</span>
-          </button>
-        )}
+        <button
+          className={`action-btn ${isLoggedIn ? 'active' : ''}`}
+          onClick={openLoginModal}
+          title={
+            isLoggedIn
+              ? `Jio Subscriber Account (${userSession?.displayName || userSession?.mobile || 'Active'})`
+              : 'Sign In with Jio'
+          }
+          aria-label={isLoggedIn ? 'Jio Account Profile' : 'Sign in with Jio'}
+        >
+          <User size={16} aria-hidden="true" />
+          {isLoggedIn && <span className="action-btn-indicator" aria-hidden="true" />}
+        </button>
       </div>
     </header>
   );

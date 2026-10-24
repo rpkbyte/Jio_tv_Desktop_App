@@ -1,128 +1,100 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Phone, KeyRound, CheckCircle2, ShieldCheck, AlertCircle, LogOut, ArrowRight, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { 
+  X, Phone, CheckCircle2, ShieldCheck, AlertCircle, 
+  LogOut, ArrowRight, RefreshCw, Lock, Info, Sliders 
+} from 'lucide-react';
+import { 
+  getActiveAuthProvider, 
+  setActiveAuthProvider,
+  localDevProvider,
+  unconfiguredProvider,
   getStoredSession, 
   isAuthenticated, 
-  sendLoginOtp, 
-  verifyLoginOtp, 
   logout 
 } from '../services/jioAuthService.js';
 
 export default function LoginModal({ isOpen, onClose }) {
-  const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'profile'
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [otp, setOtp] = useState('');
+  const [provider, setProvider] = useState(getActiveAuthProvider);
+  const [session, setSession] = useState(getStoredSession);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [resendTimer, setResendTimer] = useState(0);
-  const [session, setSession] = useState(getStoredSession);
+  const [testSubscriberId, setTestSubscriberId] = useState('DEV_SUB_10098');
+  const [testMobile, setTestMobile] = useState('9876543210');
 
-  const phoneInputRef = useRef(null);
-  const otpInputRef = useRef(null);
-
-  // Sync session state whenever modal opens or storage changes
   useEffect(() => {
     if (isOpen) {
-      const current = getStoredSession();
-      setSession(current);
-      if (current && isAuthenticated()) {
-        setStep('profile');
-      } else {
-        setStep('phone');
-        setErrorMsg('');
-        setSuccessMsg('');
-      }
+      setProvider(getActiveAuthProvider());
+      setSession(getStoredSession());
+      setErrorMsg('');
+      setSuccessMsg('');
     }
   }, [isOpen]);
 
-  // Handle countdown timer for Resend OTP
   useEffect(() => {
-    let timer = null;
-    if (resendTimer > 0) {
-      timer = setInterval(() => {
-        setResendTimer((prev) => Math.max(0, prev - 1));
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [resendTimer]);
-
-  // Autofocus input on step changes
-  useEffect(() => {
-    if (!isOpen) return;
-    if (step === 'phone') {
-      setTimeout(() => phoneInputRef.current?.focus(), 80);
-    } else if (step === 'otp') {
-      setTimeout(() => otpInputRef.current?.focus(), 80);
-    }
-  }, [step, isOpen]);
+    const handleAuthChange = () => {
+      setSession(getStoredSession());
+    };
+    window.addEventListener('jiotv-auth-change', handleAuthChange);
+    return () => window.removeEventListener('jiotv-auth-change', handleAuthChange);
+  }, []);
 
   if (!isOpen) return null;
 
-  // Handle phone submission & OTP request
-  const handleRequestOtp = async (e) => {
+  const isUserAuthenticated = Boolean(session && (session.isAuthenticated || session.authToken || session.ssoToken));
+
+  // Handle Local Dev Provider Sign In
+  const handleDevLogin = async (e, options = {}) => {
     e?.preventDefault();
+    setIsLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
 
-    const cleanNum = mobileNumber.replace(/\D/g, '');
-    if (cleanNum.length !== 10) {
-      setErrorMsg('Please enter a valid 10-digit Jio mobile number.');
-      return;
-    }
+    try {
+      const result = await provider.login({
+        subscriberId: testSubscriberId,
+        mobile: testMobile,
+        ...options
+      });
 
-    setIsLoading(true);
-    const result = await sendLoginOtp(cleanNum);
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (result.success) {
-      setStep('otp');
-      setResendTimer(30);
-      setSuccessMsg(result.message);
-    } else {
-      setErrorMsg(result.message);
+      if (result.success) {
+        setSession(result.profile);
+        setSuccessMsg(result.message);
+      } else {
+        setErrorMsg(result.message || 'Authentication failed.');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMsg('Unexpected authentication fault: ' + err.message);
     }
   };
 
-  // Handle OTP verification
-  const handleVerifyOtp = async (e) => {
-    e?.preventDefault();
+  const handleSwitchToDevProvider = () => {
+    setActiveAuthProvider(localDevProvider);
+    setProvider(localDevProvider);
+    setErrorMsg('');
+    setSuccessMsg('Switched to Authorized Local Testing Provider.');
+  };
+
+  const handleSwitchToUnconfigured = () => {
+    setActiveAuthProvider(unconfiguredProvider);
+    setProvider(unconfiguredProvider);
     setErrorMsg('');
     setSuccessMsg('');
-
-    if (otp.trim().length < 4) {
-      setErrorMsg('Please enter the verification code received via SMS.');
-      return;
-    }
-
-    setIsLoading(true);
-    const result = await verifyLoginOtp(mobileNumber, otp);
-    setIsLoading(false);
-
-    if (result.success) {
-      setSession(result.session);
-      setStep('profile');
-      setSuccessMsg('Authentication successful! Welcome to JioTV.');
-      setOtp('');
-    } else {
-      setErrorMsg(result.message);
-    }
   };
 
-  // Handle user logout
   const handleLogout = () => {
     logout();
     setSession(null);
-    setStep('phone');
-    setMobileNumber('');
-    setOtp('');
     setErrorMsg('');
     setSuccessMsg('You have been signed out.');
   };
 
-  const maskedNumber = session?.mobile 
+  const maskedNumber = session?.maskedMobile || (session?.mobile 
     ? `+91 ${session.mobile.slice(0, 2)}•••• ••${session.mobile.slice(-2)}`
-    : '';
+    : '+91 98•••• ••10');
 
   return (
     <div
@@ -138,7 +110,9 @@ export default function LoginModal({ isOpen, onClose }) {
           <div className="modal-header-brand">
             <span className="jio-brand-badge">Jio</span>
             <h3 id="login-modal-title" className="modal-title">
-              {step === 'profile' ? 'JioTV Subscriber Account' : 'Sign In with Jio'}
+              {isUserAuthenticated 
+                ? 'JioTV Subscriber Account' 
+                : 'Authentication Provider'}
             </h3>
           </div>
           <button
@@ -164,139 +138,8 @@ export default function LoginModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* Step 1: Mobile Number Input */}
-        {step === 'phone' && (
-          <form onSubmit={handleRequestOtp} className="jio-auth-form">
-            <p className="jio-auth-desc">
-              Enter your registered Jio mobile number to access live broadcasts, synchronized catch-up, and account preferences.
-            </p>
-
-            <div className="jio-input-group">
-              <label htmlFor="jio-mobile-input" className="jio-input-label">
-                Jio Mobile Number
-              </label>
-              <div className="jio-phone-wrapper">
-                <span className="jio-country-code">+91</span>
-                <input
-                  id="jio-mobile-input"
-                  ref={phoneInputRef}
-                  type="tel"
-                  className="jio-phone-input"
-                  placeholder="98765 43210"
-                  maxLength={10}
-                  value={mobileNumber}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    setMobileNumber(val);
-                    if (errorMsg) setErrorMsg('');
-                  }}
-                  disabled={isLoading}
-                  autoComplete="tel-national"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="jio-btn-primary"
-              disabled={isLoading || mobileNumber.replace(/\D/g, '').length !== 10}
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw size={16} className="spin-icon" aria-hidden="true" />
-                  <span>Requesting OTP...</span>
-                </>
-              ) : (
-                <>
-                  <span>Send OTP</span>
-                  <ArrowRight size={16} aria-hidden="true" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* Step 2: OTP Verification */}
-        {step === 'otp' && (
-          <form onSubmit={handleVerifyOtp} className="jio-auth-form">
-            <p className="jio-auth-desc">
-              Enter the 6-digit one-time password sent to <strong className="jio-highlight-number">+91 {mobileNumber}</strong>.
-              <button
-                type="button"
-                className="jio-btn-inline-change"
-                onClick={() => {
-                  setStep('phone');
-                  setOtp('');
-                  setErrorMsg('');
-                }}
-              >
-                Change
-              </button>
-            </p>
-
-            <div className="jio-input-group">
-              <label htmlFor="jio-otp-input" className="jio-input-label">
-                Verification Code (OTP)
-              </label>
-              <div className="jio-otp-wrapper">
-                <KeyRound size={16} className="jio-field-icon" aria-hidden="true" />
-                <input
-                  id="jio-otp-input"
-                  ref={otpInputRef}
-                  type="text"
-                  className="jio-otp-input"
-                  placeholder="Enter 6-digit OTP"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => {
-                    setOtp(e.target.value.trim());
-                    if (errorMsg) setErrorMsg('');
-                  }}
-                  disabled={isLoading}
-                  autoComplete="one-time-code"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="jio-resend-row">
-              {resendTimer > 0 ? (
-                <span className="jio-timer-text">Resend code in {resendTimer}s</span>
-              ) : (
-                <button
-                  type="button"
-                  className="jio-resend-btn"
-                  onClick={handleRequestOtp}
-                  disabled={isLoading}
-                >
-                  Resend OTP
-                </button>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="jio-btn-primary"
-              disabled={isLoading || otp.trim().length < 4}
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw size={16} className="spin-icon" aria-hidden="true" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <span>Verify &amp; Sign In</span>
-                  <ShieldCheck size={16} aria-hidden="true" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* Step 3: Authenticated Profile Details */}
-        {step === 'profile' && session && (
+        {/* View 1: Authenticated Subscriber Profile */}
+        {isUserAuthenticated && (
           <div className="jio-profile-content">
             <div className="jio-profile-badge-card">
               <div className="jio-profile-avatar">
@@ -304,7 +147,7 @@ export default function LoginModal({ isOpen, onClose }) {
               </div>
               <div className="jio-profile-info">
                 <div className="jio-profile-title-row">
-                  <span className="jio-profile-name">{session.commonName || 'Jio Subscriber'}</span>
+                  <span className="jio-profile-name">{session.displayName || session.commonName || 'Jio Subscriber'}</span>
                   <span className="jio-active-pill">
                     <span className="jio-status-dot" aria-hidden="true" />
                     Active Session
@@ -317,16 +160,16 @@ export default function LoginModal({ isOpen, onClose }) {
 
             <div className="jio-profile-meta-list">
               <div className="jio-meta-row">
-                <span className="jio-meta-label">Session Status</span>
-                <span className="jio-meta-val">Verified SSO Token</span>
+                <span className="jio-meta-label">Provider</span>
+                <span className="jio-meta-val">{provider.name}</span>
               </div>
               <div className="jio-meta-row">
-                <span className="jio-meta-label">Local Token Storage</span>
-                <span className="jio-meta-val">localStorage (Encrypted Session)</span>
+                <span className="jio-meta-label">Credential Isolation</span>
+                <span className="jio-meta-val">Protected (Zero Plaintext Storage)</span>
               </div>
               <div className="jio-meta-row">
-                <span className="jio-meta-label">Broadcast Tier</span>
-                <span className="jio-meta-val">JioTV HD &amp; Catch-up Unlimited</span>
+                <span className="jio-meta-label">Subscription Tier</span>
+                <span className="jio-meta-val">{session.tier || 'JioTV HD & Catch-up Unlimited'}</span>
               </div>
             </div>
 
@@ -348,6 +191,154 @@ export default function LoginModal({ isOpen, onClose }) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* View 2: Unconfigured Provider State (Compliant Policy View) */}
+        {!isUserAuthenticated && !provider.isConfigured && (
+          <div className="jio-auth-form">
+            <div className="settings-status-row" style={{ marginTop: '4px', marginBottom: '16px' }}>
+              <div className="status-row-left">
+                <Lock size={18} className="status-icon" aria-hidden="true" />
+                <div>
+                  <div className="status-row-label">Official Authentication Gateway</div>
+                  <div className="status-row-desc">Security Policy Status: Unconfigured</div>
+                </div>
+              </div>
+              <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                Access Required
+              </span>
+            </div>
+
+            <p className="jio-auth-desc" style={{ lineHeight: '1.6' }}>
+              Official JioTV desktop subscriber authentication requires an authorized OAuth 2.0 / OIDC identity 
+              gateway or official client SDK with verified partner credentials. 
+            </p>
+
+            <div className="jio-alert" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)', color: '#93c5fd' }}>
+              <Info size={16} aria-hidden="true" style={{ flexShrink: 0 }} />
+              <span>
+                To protect subscriber accounts, this app does not collect personal credentials, passwords, or SMS OTPs through uncertified forms.
+              </span>
+            </div>
+
+            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                className="jio-btn-primary"
+                onClick={handleSwitchToDevProvider}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <Sliders size={16} aria-hidden="true" />
+                <span>Switch to Authorized Local Testing Provider</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* View 3: Authorized Local Testing Provider Mode */}
+        {!isUserAuthenticated && provider.isConfigured && (
+          <form onSubmit={handleDevLogin} className="jio-auth-form">
+            <div className="settings-status-row" style={{ marginTop: '4px', marginBottom: '16px' }}>
+              <div className="status-row-left">
+                <ShieldCheck size={18} className="status-icon" style={{ color: '#4ade80' }} aria-hidden="true" />
+                <div>
+                  <div className="status-row-label">Authorized Local Testing Provider</div>
+                  <div className="status-row-desc">Safe in-memory session testing</div>
+                </div>
+              </div>
+              <span className="status-badge">
+                Ready
+              </span>
+            </div>
+
+            <div className="jio-input-group">
+              <label htmlFor="test-sub-id" className="jio-input-label">
+                Test Subscriber ID
+              </label>
+              <input
+                id="test-sub-id"
+                type="text"
+                className="jio-otp-input"
+                style={{ width: '100%', textAlign: 'left', padding: '10px 14px' }}
+                value={testSubscriberId}
+                onChange={(e) => setTestSubscriberId(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </div>
+
+            <div className="jio-input-group">
+              <label htmlFor="test-phone-input" className="jio-input-label">
+                Masked Test Mobile
+              </label>
+              <div className="jio-phone-wrapper">
+                <span className="jio-country-code">+91</span>
+                <input
+                  id="test-phone-input"
+                  type="tel"
+                  className="jio-phone-input"
+                  maxLength={10}
+                  value={testMobile}
+                  onChange={(e) => setTestMobile(e.target.value.replace(/\D/g, ''))}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Test Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+              <button
+                type="submit"
+                className="jio-btn-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw size={16} className="spin-icon" aria-hidden="true" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In Test Subscriber</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </>
+                )}
+              </button>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="ctrl-btn"
+                  style={{ width: '100%', height: '36px', fontSize: '12px', border: '1px solid var(--border-default)', borderRadius: '8px' }}
+                  onClick={(e) => handleDevLogin(e, { cancelled: true })}
+                  disabled={isLoading}
+                  title="Test how the app handles user cancellation"
+                >
+                  Test Cancellation
+                </button>
+                <button
+                  type="button"
+                  className="ctrl-btn"
+                  style={{ width: '100%', height: '36px', fontSize: '12px', border: '1px solid var(--border-default)', borderRadius: '8px' }}
+                  onClick={(e) => handleDevLogin(e, { simulateNetworkError: true })}
+                  disabled={isLoading}
+                  title="Test network failure error state"
+                >
+                  Test Network Fault
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="btn-text"
+                style={{ fontSize: '12px', marginTop: '4px' }}
+                onClick={handleSwitchToUnconfigured}
+              >
+                ← Return to Official Gateway Status
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>

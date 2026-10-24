@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node src/test/jioServices.test.js && node src/test/player.test.js && node src/test/theme.test.js && node src/test/authProvider.test.js && node src/test/streamingProvider.test.js && node src/test/electronSecurity.test.js",
     "start": "node desktop-runner.js",
     "desktop": "node desktop-runner.js"
   },

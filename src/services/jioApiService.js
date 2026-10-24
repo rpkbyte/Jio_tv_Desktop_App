@@ -1,6 +1,11 @@
 // JioTV Official API Service (Hybrid Sync, CDN Metadata & Live 24-hr EPG)
-// Sourced from JioTV Mobile Application Bytecode Analysis
+// Backed by StreamingProvider abstraction
 import { getStoredSession, getOrCreateDeviceId } from './jioAuthService.js';
+import { AuthorizedSampleStreamProvider } from './streaming/AuthorizedSampleStreamProvider.js';
+import { JioTVStreamProvider } from './streaming/JioTVStreamProvider.js';
+
+export const authorizedSampleProvider = new AuthorizedSampleStreamProvider();
+export const jioProductionProvider = new JioTVStreamProvider();
 
 export const JIO_CATEGORY_MAP = {
   '10': 'Infotainment',
