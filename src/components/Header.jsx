@@ -117,20 +117,39 @@ export default function Header({
           <Settings size={16} aria-hidden="true" />
         </button>
 
+        {/* Subtle Section Divider */}
+        <div className="header-divider" aria-hidden="true" />
+
         {/* Jio Subscriber Account / Sign In */}
-        <button
-          className={`action-btn ${isLoggedIn ? 'active' : ''}`}
-          onClick={openLoginModal}
-          title={
-            isLoggedIn
-              ? `Jio Subscriber Account (${userSession?.displayName || userSession?.mobile || 'Active'})`
-              : 'Sign In with Jio'
-          }
-          aria-label={isLoggedIn ? 'Jio Account Profile' : 'Sign in with Jio'}
-        >
-          <User size={16} aria-hidden="true" />
-          {isLoggedIn && <span className="action-btn-indicator" aria-hidden="true" />}
-        </button>
+        {isLoggedIn ? (
+          <button
+            className="header-profile-btn"
+            onClick={openLoginModal}
+            title={`Jio Subscriber Account (${userSession?.displayName || userSession?.mobile || 'Active'})`}
+            aria-label="Jio Subscriber Account Profile"
+          >
+            <div className="profile-avatar">
+              <User size={13} aria-hidden="true" />
+            </div>
+            <div className="profile-meta">
+              <span className="profile-name">
+                {userSession?.displayName || (userSession?.mobile ? `+91 ${userSession.mobile.slice(-4)}` : 'Subscriber')}
+              </span>
+              <span className="profile-status-dot" aria-hidden="true" />
+            </div>
+            <ChevronDown size={14} className="profile-chevron" aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            className="header-login-btn"
+            onClick={openLoginModal}
+            title="Sign in with your Jio subscriber account"
+            aria-label="Sign in with Jio"
+          >
+            <User size={15} aria-hidden="true" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
     </header>
   );
